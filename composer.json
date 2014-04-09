@@ -1,0 +1,13 @@
+{
+    "name": "rckt/bitbucket-asana",
+    "description": "A Bitbucket / Asana connector hook",
+    "require": {
+        "monolog/monolog": "~1.8.0"
+    },
+    "authors": [
+        {
+            "name": "John Noel",
+            "email": "john.noel@rckt.co.uk"
+        }
+    ]
+}
