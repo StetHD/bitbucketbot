@@ -1,8 +1,12 @@
 {
     "name": "rckt/bitbucket-asana",
     "description": "A Bitbucket / Asana connector hook",
+    "autoload": {
+        "psr-0": { "": "src/" }
+    },
     "require": {
-        "monolog/monolog": "~1.8.0"
+        "monolog/monolog": "~1.8.0",
+        "symfony/http-foundation": "~2.4.3"
     },
     "authors": [
         {

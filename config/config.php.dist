@@ -1,0 +1,16 @@
+<?php
+return array(
+    'bitbucket' => array(
+        'key' => '',
+        'secret' => '',
+        'access_token' => '',
+        'secret_token' => '',
+    ),
+
+    'user_map' => array(
+    ),
+
+    'project_map' => array(
+    ),
+);
+
