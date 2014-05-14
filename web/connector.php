@@ -13,7 +13,7 @@ use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Symfony\Component\HttpFoundation\Request;
 
-require __DIR__.'/vendor/autoload';
+require __DIR__.'/../vendor/autoload';
 
 // logging
 $requestLog = new Logger('request');
@@ -51,4 +51,22 @@ if ($payload === null) {
 }
 
 // do things
+$config = require __DIR__.'/../config/config.php';
 
+if (!array_key_exists($projectId, $config['project_map'])) {
+    header('HTTP/1.1 404 Not Found');
+    $msg = sprintf('No project found in map for ID %s', $projectId);
+    $appLog->addError($msg);
+    die($msg);
+}
+
+$repo = $config['project_map'][$projectId];
+
+$bitbucket = new Bitbucket($config['bitbucket']['key'], $config['bitbucket']['secret']);
+$bitbucket->setAccessToken($config['bitbucket']['access_token'])
+    ->setSecretToken($config['bitbucket']['secret_token']);
+
+$asana = new Asana($config['asana']['client_id'], $config['asana']['client_secret']);
+$asana->setApiKey($config['asana']['api_key']);
+
+$changesets = $bitbucket->getChangesets($repo);
