@@ -37,11 +37,14 @@ class Command
         }
 
         $matches = array();
-        $count = preg_match_all('/\[[^\]]+\]/', $text, $matches);
+        $pattern = '/\[[^\]]+\]/';
+        $count = preg_match_all($pattern, $text, $matches);
 
         if (!$count) {
             return array();
         }
+
+        $globalMessage = trim(preg_replace($pattern, ''));
 
         $ret = array();
 
@@ -64,6 +67,7 @@ class Command
             $reassign = reset($reassign);
 
             $message = trim(preg_replace($pattern, '', $match));
+            $message = (empty($message)) ? $globalMessage : $message;
 
             $command = new self();
             $command->setId($id)

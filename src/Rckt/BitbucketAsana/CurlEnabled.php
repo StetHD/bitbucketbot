@@ -13,7 +13,7 @@ abstract class CurlEnabled
 {
     protected $curl;
 
-    protected function httpRequest($method, $url, $params = array(), $headers = array())
+    protected function curlInit()
     {
         if ($this->curl === null) {
             $this->curl = curl_init();
@@ -24,6 +24,11 @@ abstract class CurlEnabled
                 CURLOPT_USERAGENT => 'php',
             ));
         }
+    }
+
+    protected function httpRequest($method, $url, $params = array(), $headers = array())
+    {
+        $this->curlInit();
 
         $method = strtoupper($method);
 
@@ -37,6 +42,12 @@ abstract class CurlEnabled
                 // not an array so no content-type: multipart/form-data
                 curl_setopt($this->curl, CURLOPT_POSTFIELDS, http_build_query($params));
             }
+        } else if ($method == 'PUT') {
+            curl_setopt_array($this->curl, array(
+                CURLOPT_CUSTOMREQUEST => 'PUT',
+                CURLOPT_POSTFIELDS => http_build_query($params),
+                CURLOPT_URL => $url,
+            ));
         } else {
             $requestUrl = (!empty($params)) ? $url.'?'.http_build_query($params) : $url;
 
@@ -51,6 +62,11 @@ abstract class CurlEnabled
         }
 
         $response = curl_exec($this->curl);
+
+        if ($response === false) {
+            throw new \Exception(sprintf('cURL error: [%d] %s', curl_errno($this->curl), curl_error($this->curl)));
+        }
+
         $httpCode = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
 
         if ($httpCode > 399) {

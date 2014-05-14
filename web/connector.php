@@ -12,6 +12,8 @@
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Symfony\Component\HttpFoundation\Request;
+use Rckt\BitbucketAsana\Bitbucket,
+    Rckt\BitbucketAsana\Command\Command;
 
 require __DIR__.'/../vendor/autoload';
 
@@ -26,15 +28,15 @@ $request = Request::createFromGlobals();
 $requestLog->addDebug($request->__toString());
 
 // validate request params
-$projectId = (array_key_exists('project_id', $_GET) && !empty($_GET['project_id'])) ? $_GET['project_id'] : null;
+$projectId = $request->query->get('project_id', '');
 
-if ($projectId === null) {
+if (empty($projectId)) {
     header('HTTP/1.1 400 Bad Request');
     $appLog->addError('No project_id supplied');
     die('No project_id supplied');
 }
 
-$payload = file_get_contents('php://input');
+$payload = $request->getContent();
 
 if (empty($payload)) {
     header('HTTP/1.1 400 Bad Request');
@@ -49,6 +51,8 @@ if ($payload === null) {
     $appLog->addError('Unable to decode payload');
     die('Unable to decode payload');
 }
+
+// todo validate payload
 
 // do things
 $config = require __DIR__.'/../config/config.php';
@@ -69,4 +73,23 @@ $bitbucket->setAccessToken($config['bitbucket']['access_token'])
 $asana = new Asana($config['asana']['client_id'], $config['asana']['client_secret']);
 $asana->setApiKey($config['asana']['api_key']);
 
+// todo since
 $changesets = $bitbucket->getChangesets($repo);
+
+foreach ($changesets->changesets as $changeset) {
+    $message = trim($changeset->message);
+
+    $commands = Command::parse($message);
+    if (count($commands) == 0) {
+        continue;
+    }
+
+    $author = $changeset->author;
+    if (!array_key_exists($author, $config['user_map'])) {
+        $appLog->addDebug(sprintf('Unable to map user %s', $author));
+    }
+
+    foreach ($commands as $command) {
+        //$asana->postStory($command);
+    }
+}

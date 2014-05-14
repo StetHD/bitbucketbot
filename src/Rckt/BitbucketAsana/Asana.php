@@ -12,9 +12,15 @@ namespace Rckt\BitbucketAsana;
 class Asana extends OAuth2
 {
     protected $apiKey;
+    protected $clientId;
+    protected $clientSecret;
 
-    public function __construct($clientId, $clientSecret)
+    protected $workspaceId;
+    protected $tagMap;
+
+    public function __construct($workspaceId, $clientId, $clientSecret)
     {
+        $this->workspaceId = $workspaceId;
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
     }
@@ -58,6 +64,58 @@ class Asana extends OAuth2
         return $this->api('POST', '/tasks/'.$taskId.'/stories', array(
             'text' => $text,
         ));
+    }
+
+    public function getTags()
+    {
+        return $this->api('GET', '/tags');
+    }
+
+    public function createTag($tag)
+    {
+        return $this->api('POST', '/tags', array(
+            'name' => $tag,
+            'workspace' => $this->workspaceId,
+        ));
+    }
+
+    public function updateTags($taskId, $tags)
+    {
+        if ($this->tagMap === null) {
+            $existingTags = $this->getTags();
+            $this->tagMap = array();
+
+            foreach ($existingTags->data as $tag) {
+                $tagName = (function_exists('mb_strtolower')) ? mb_strtolower($tag->name) : strtolower($tag->name);
+                $this->tagMap[$tagName] = $tag->id;
+            }
+        }
+
+        foreach ($tags as $tag) {
+            $tagName = (function_exists('mb_strtolower')) ? mb_strtolower($tag) : strtolower($tag);
+
+            if (!array_key_exists($tagName, $this->tagMap)) {
+                $resp = $this->createTag($tag);
+                $this->tagMap[$tagName] = $resp->data->id;
+            }
+
+            $tagId = $this->tagMap[$tagName];
+            $this->api('POST', '/tasks/'.$taskId.'/addTag', array(
+                'tag' => $tagId,
+            ));
+        }
+    }
+
+    public function updateAssignee($taskId, $assignee)
+    {
+        $this->api('PUT', '/tasks/'.$taskId, array(
+            'assignee' => $assignee,
+        ));
+    }
+
+    public function getWorkspaces()
+    {
+        return $this->api('GET', '/workspaces');
     }
 
     protected function refreshToken()
