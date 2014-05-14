@@ -90,6 +90,20 @@ foreach ($changesets->changesets as $changeset) {
     }
 
     foreach ($commands as $command) {
-        //$asana->postStory($command);
+        if ($command->hasMessage()) {
+            $asana->addcommand($command->getId(), $command->getMessage());
+        }
+
+        if ($command->hasTags()) {
+            $asana->updateTags($command->getId(), $command->getTags());
+        }
+
+        if ($command->hasReassignment()) {
+            $user = $command->getReassignment();
+
+            // get userId from map
+
+            $asana->updateAssignee($comment->getId(), $userId);
+        }
     }
 }

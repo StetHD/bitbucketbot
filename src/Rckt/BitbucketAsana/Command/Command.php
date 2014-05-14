@@ -17,7 +17,7 @@ class Command
 {
     protected $id;
     protected $message;
-    protected $tags;
+    protected $tags = array();
     protected $resassign;
 
     public function __construct()
@@ -61,6 +61,11 @@ class Command
 
             $id = array_filter($localMatches['id']);
             $id = reset($id);
+
+            if (empty($id)) { // if we don't have an ID, skip
+                continue;
+            }
+
             $tags = array_filter($localMatches['tags']);
             $tags = array_filter(explode(',', reset($tags)));
             $reassign = array_filter($localMatches['reassign']);
@@ -103,6 +108,11 @@ class Command
         return $this->message;
     }
 
+    public function hasMessage()
+    {
+        return !empty($this->message);
+    }
+
     public function setTags(array $tags)
     {
         $this->tags = $tags;
@@ -114,6 +124,11 @@ class Command
         return $this->tags;
     }
 
+    public function hasTags()
+    {
+        return !empty($this->tags);
+    }
+
     public function setReassignment($reassign)
     {
         $this->reassign = $reassign;
@@ -123,5 +138,10 @@ class Command
     public function getReassignment()
     {
         return $this->reassign;
+    }
+
+    public function hasReassignment()
+    {
+        return !empty($this->reassign);
     }
 }
