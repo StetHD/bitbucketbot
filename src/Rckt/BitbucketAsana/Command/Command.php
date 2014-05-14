@@ -10,6 +10,9 @@
 
 namespace Rckt\BitbucketAsana\Command;
 
+/**
+ * Represents a command that will be sent to Asana
+ */
 class Command
 {
     protected $id;

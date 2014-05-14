@@ -54,7 +54,7 @@ abstract class CurlEnabled
         $httpCode = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
 
         if ($httpCode > 399) {
-            throw new \Exception(sprintf('%s request for %s unsuccessful, server said %s, headers were %s', $method, $url, $response, implode(',', $headers)));
+            throw new \Exception(sprintf('%s request for %s unsuccessful, server said [%d] %s, headers were %s', $method, $url, $httpCode, $response, implode(',', $headers)));
         }
 
         return $response;

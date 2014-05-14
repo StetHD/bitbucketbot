@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\Request;
 
 class Bitbucket extends OAuth1
 {
+    const BASE_URL = 'https://bitbucket.org/api/1.0';
+
     public function __construct($consumerKey, $consumerSecret)
     {
         $this->consumerKey = $consumerKey;
@@ -55,5 +57,23 @@ class Bitbucket extends OAuth1
         parse_str($resp, $ret);
 
         return $ret;
+    }
+
+    public function getChangesets($repository)
+    {
+        $url = sprintf('%s/repositories/%s/%s/changesets',
+            self::BASE_URL,
+            'rckt',
+            $repository
+        );
+
+        return json_decode($this->httpRequest('GET', $url));
+    }
+
+    public function getRepositories()
+    {
+        $url = sprintf('%s/user/repositories', self::BASE_URL);
+
+        return json_decode($this->httpRequest('GET', $url));
     }
 }

@@ -101,7 +101,7 @@ abstract class OAuth1 extends CurlEnabled
 
     protected function getAuthorisationHeader($method, $url, $requestParams)
     {
-        $oauthParts = $this->getOAuthParts($method, $url, $requestParams);
+        $oauthParts = $this->getOAuthParameters($method, $url, $requestParams);
         ksort($oauthParts, SORT_STRING);
 
         $ret = '';
@@ -127,5 +127,14 @@ abstract class OAuth1 extends CurlEnabled
         }
 
         return base64_encode($string);
+    }
+
+    /**
+     * @override CurlEnabled::httpRequest
+     */
+    protected function httpRequest($method, $url, $params = array(), $headers = array())
+    {
+        $headers[] = 'Authorization: '.$this->getAuthorisationHeader($method, $url, $params);
+        return parent::httpRequest($method, $url, $params, $headers);
     }
 }
