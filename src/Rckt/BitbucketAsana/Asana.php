@@ -112,18 +112,43 @@ class Asana extends OAuth2
         ));
     }
 
-    public function updateAssignee($taskId, $assigneeEmail)
+    public function findUser($search)
     {
         if ($this->userMap === null) {
-            $existingUser = $this->getUsers();
+            $existingUsers = $this->getUsers();
             $this->userMap = array();
 
             foreach ($existingUsers->data as $user) {
-                $this->userMap[$user->email] = $user->id;
+                $this->userMap[$user->email] = $user;
             }
         }
 
-        if (!array_key_exists($assigneeEmail, $this->userMap)) {
+        $userId = (array_key_exists($search, $this->userMap)) ? $this->userMap[$assignee]->id : null;
+
+        if ($userId === null) {
+            foreach ($this->userMap as $user) {
+                $pattern = '/^'.preg_quote($search, '/').'/i';
+
+                if (preg_match($pattern, $user->name) === 1) {
+                    $userId = $user->id;
+                    break;
+                }
+
+                if (preg_match($pattern, $user->email) === 1) {
+                    $userId = $user->id;
+                    break;
+                }
+            }
+        }
+
+        return $userId;
+    }
+
+    public function updateAssignee($taskId, $assignee)
+    {
+        $userId = $this->findUser($assignee);
+
+        if ($userId === null) {
             throw new \RuntimeException(sprintf('Unable to find user with e-mail %s, available emails are %s',
                 $assigneeEmail,
                 implode(', ', array_keys($this->userMap))
@@ -131,7 +156,7 @@ class Asana extends OAuth2
         }
 
         $this->api('PUT', '/tasks/'.$taskId, array(
-            'assignee' => $assignee,
+            'assignee' => $userId,
         ));
     }
 
