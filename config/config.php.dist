@@ -5,6 +5,7 @@ return array(
         'secret' => '',
         'access_token' => '',
         'secret_token' => '',
+        'workspace' => '',
     ),
 
     'asana' => array(
@@ -12,17 +13,11 @@ return array(
         'client_id' => '',
         'client_secret' => '',
         'token' => '',
+        'workspace_id' => '',
     ),
 
     'db' => array(
         'driver' => 'pdo_sqlite',
         'path' => __DIR__.'/../db/bitbucketasana.sqlite',
     ),
-
-    'user_map' => array(
-    ),
-
-    'project_map' => array(
-    ),
 );
-
