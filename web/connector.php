@@ -94,12 +94,6 @@ foreach ($changesets as $changeset) {
 
     $appLog->addInfo(sprintf('Found %d commands', count($commands)));
 
-    $author = $changeset->author;
-    /*if (!array_key_exists($author, $config['user_map'])) {
-        $appLog->addDebug(sprintf('Unable to map user %s', $author));
-        continue;
-    }*/
-
     $url = $bitbucket->getUrl($repo, $changeset->raw_node);
 
     foreach ($commands as $command) {
@@ -114,11 +108,13 @@ foreach ($changesets as $changeset) {
         }
 
         if ($command->hasReassignment()) {
-            $user = $command->getReassignment();
+            $userEmail = $command->getReassignment();
 
-            // get userId from map
-
-            $asana->updateAssignee($comment->getId(), $userId);
+            try {
+                $asana->updateAssignee($comment->getId(), $userEmail);
+            } catch (\RuntimeException $e) {
+                $appLog->addError($e->getMessage());
+            }
         }
     }
 }

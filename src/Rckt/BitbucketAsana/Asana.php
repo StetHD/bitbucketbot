@@ -15,6 +15,7 @@ class Asana extends OAuth2
 
     protected $workspaceId;
     protected $tagMap;
+    protected $userMap;
 
     public function __construct($workspaceId, $clientId, $clientSecret)
     {
@@ -104,8 +105,29 @@ class Asana extends OAuth2
         }
     }
 
-    public function updateAssignee($taskId, $assignee)
+    public function getUsers()
     {
+        return $this->api('GET', '/users');
+    }
+
+    public function updateAssignee($taskId, $assigneeEmail)
+    {
+        if ($this->userMap === null) {
+            $existingUser = $this->getUsers();
+            $this->userMap = array();
+
+            foreach ($existingUsers->data as $user) {
+                $this->userMap[$user->email] = $user->id;
+            }
+        }
+
+        if (!array_key_exists($assigneeEmail, $this->userMap)) {
+            throw new \RuntimeException(sprintf('Unable to find user with e-mail %s, available emails are %s',
+                $assigneeEmail,
+                implode(', ', array_keys($this->userMap))
+            ));
+        }
+
         $this->api('PUT', '/tasks/'.$taskId, array(
             'assignee' => $assignee,
         ));
