@@ -62,7 +62,7 @@ class Bitbucket extends OAuth1
         return $ret;
     }
 
-    public function getChangesets($repository)
+    public function getChangesets($repository, $lastChange = null)
     {
         $url = sprintf('%s/repositories/%s/%s/changesets',
             self::BASE_URL,
@@ -70,7 +70,41 @@ class Bitbucket extends OAuth1
             $repository
         );
 
-        return json_decode($this->httpRequest('GET', $url));
+        $params = array(
+            'limit' => 30,
+        );
+
+        $raw = json_decode($this->httpRequest('GET', $url, $params));
+        $changesets = $raw->changesets;
+
+        // do reverse date ordering of them
+        usort($changesets, function($a, $b) {
+            $aDate = \DateTime::createFromFormat('Y-m-d H:i:sP', $a->utctimestamp);
+            $bDate = \DateTime::createFromFormat('Y-m-d H:i:sP', $b->utctimestamp);
+            $aTs = $aDate->getTimestamp();
+            $bTs = $bDate->getTimestamp();
+
+            if ($aTs == $bTs) {
+                return 0;
+            }
+
+            return ($aTs > $bTs) ? -1 : 1;
+        });
+
+        if ($lastChange === null) {
+            return $changesets;
+        }
+
+        $ret = array();
+        foreach ($changesets as $changeset) {
+            if ($changeset->raw_node == $lastChange) {
+                return $ret;
+            }
+
+            $ret[] = $changeset;
+        }
+
+        return $ret;
     }
 
     public function getRepositories()

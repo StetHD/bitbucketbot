@@ -14,6 +14,7 @@ use Monolog\Handler\StreamHandler;
 use Symfony\Component\HttpFoundation\Request;
 use Rckt\BitbucketAsana\Bitbucket,
     Rckt\BitbucketAsana\Asana,
+    Rckt\BitbucketAsana\Persistence,
     Rckt\BitbucketAsana\Command\Command;
 
 require __DIR__.'/../vendor/autoload.php';
@@ -74,10 +75,16 @@ $bitbucket->setAccessToken($config['bitbucket']['access_token'])
 $asana = new Asana($config['asana']['workspace_id'], $config['asana']['client_id'], $config['asana']['client_secret']);
 $asana->setApiKey($config['asana']['api_key']);
 
-// todo since
-$changesets = $bitbucket->getChangesets($repo);
+$persistence = new Persistence($config['db']);
+$lastChange = $persistence->getLastChange($repo);
 
-foreach ($changesets->changesets as $changeset) {
+$changesets = $bitbucket->getChangesets($repo, $lastChange);
+
+if (count($changesets) == 0) {
+    exit;
+}
+
+foreach ($changesets as $changeset) {
     $message = trim($changeset->message);
 
     $commands = Command::parse($message);
