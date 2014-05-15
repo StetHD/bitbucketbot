@@ -13,16 +13,17 @@ use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Symfony\Component\HttpFoundation\Request;
 use Rckt\BitbucketAsana\Bitbucket,
+    Rckt\BitbucketAsana\Asana,
     Rckt\BitbucketAsana\Command\Command;
 
-require __DIR__.'/../vendor/autoload';
+require __DIR__.'/../vendor/autoload.php';
 
 // logging
 $requestLog = new Logger('request');
-$requestLog->pushHandler(new StreamHandler(__DIR__.'/logs/request.log', Logger::DEBUG));
+$requestLog->pushHandler(new StreamHandler(__DIR__.'/../logs/request.log', Logger::DEBUG));
 
 $appLog = new Logger('application');
-$appLog->pushHandler(new StreamHandler(__DIR__.'/logs/app.log', Logger::DEBUG));
+$appLog->pushHandler(new StreamHandler(__DIR__.'/../logs/app.log', Logger::DEBUG));
 
 $request = Request::createFromGlobals();
 $requestLog->addDebug($request->__toString());
@@ -66,11 +67,11 @@ if (!array_key_exists($projectId, $config['project_map'])) {
 
 $repo = $config['project_map'][$projectId];
 
-$bitbucket = new Bitbucket($config['bitbucket']['key'], $config['bitbucket']['secret']);
+$bitbucket = new Bitbucket($config['bitbucket']['workspace'], $config['bitbucket']['key'], $config['bitbucket']['secret']);
 $bitbucket->setAccessToken($config['bitbucket']['access_token'])
     ->setSecretToken($config['bitbucket']['secret_token']);
 
-$asana = new Asana($config['asana']['client_id'], $config['asana']['client_secret']);
+$asana = new Asana($config['asana']['workspace_id'], $config['asana']['client_id'], $config['asana']['client_secret']);
 $asana->setApiKey($config['asana']['api_key']);
 
 // todo since
@@ -84,14 +85,21 @@ foreach ($changesets->changesets as $changeset) {
         continue;
     }
 
+    $appLog->addInfo(sprintf('Found %d commands', count($commands)));
+
     $author = $changeset->author;
-    if (!array_key_exists($author, $config['user_map'])) {
+    /*if (!array_key_exists($author, $config['user_map'])) {
         $appLog->addDebug(sprintf('Unable to map user %s', $author));
-    }
+        continue;
+    }*/
+
+    $url = $bitbucket->getUrl($repo, $changeset->raw_node);
 
     foreach ($commands as $command) {
         if ($command->hasMessage()) {
-            $asana->addcommand($command->getId(), $command->getMessage());
+            $msg = sprintf('This task was referenced by commit %s with the message: %s',
+                $url, $command->getMessage());
+            $asana->addComment($command->getId(), $msg);
         }
 
         if ($command->hasTags()) {

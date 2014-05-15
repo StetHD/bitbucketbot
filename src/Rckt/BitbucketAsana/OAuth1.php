@@ -17,6 +17,12 @@ abstract class OAuth1 extends CurlEnabled
     protected $accessToken;
     protected $secretToken;
 
+    public function __construct($consumerKey, $consumerSecret)
+    {
+        $this->consumerKey = $consumerKey;
+        $this->consumerSecret = $consumerSecret;
+    }
+
     public function getAccessToken()
     {
         return $this->accessToken;

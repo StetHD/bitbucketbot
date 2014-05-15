@@ -12,8 +12,6 @@ namespace Rckt\BitbucketAsana;
 class Asana extends OAuth2
 {
     protected $apiKey;
-    protected $clientId;
-    protected $clientSecret;
 
     protected $workspaceId;
     protected $tagMap;
@@ -21,8 +19,8 @@ class Asana extends OAuth2
     public function __construct($workspaceId, $clientId, $clientSecret)
     {
         $this->workspaceId = $workspaceId;
-        $this->clientId = $clientId;
-        $this->clientSecret = $clientSecret;
+
+        parent::__construct($clientId, $clientSecret);
     }
 
     public function setApiKey($apiKey)

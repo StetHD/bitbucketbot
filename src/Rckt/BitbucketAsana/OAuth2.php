@@ -16,6 +16,12 @@ class OAuth2 extends CurlEnabled
     protected $clientSecret;
     protected $token;
 
+    public function __construct($clientId, $clientSecret)
+    {
+        $this->clientId = $clientId;
+        $this->clientSecret = $clientSecret;
+    }
+
     public function getClientId()
     {
         return $this->clientId;

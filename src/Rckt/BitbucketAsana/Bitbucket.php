@@ -15,10 +15,13 @@ class Bitbucket extends OAuth1
 {
     const BASE_URL = 'https://bitbucket.org/api/1.0';
 
-    public function __construct($consumerKey, $consumerSecret)
+    protected $workspace;
+
+    public function __construct($workspace, $consumerKey, $consumerSecret)
     {
-        $this->consumerKey = $consumerKey;
-        $this->consumerSecret = $consumerSecret;
+        $this->workspace = $workspace;
+
+        parent::__construct($consumerKey, $consumerSecret);
     }
 
     public function authorisationStep1($callbackUrl)
@@ -63,7 +66,7 @@ class Bitbucket extends OAuth1
     {
         $url = sprintf('%s/repositories/%s/%s/changesets',
             self::BASE_URL,
-            'rckt',
+            $this->workspace,
             $repository
         );
 
@@ -75,5 +78,14 @@ class Bitbucket extends OAuth1
         $url = sprintf('%s/user/repositories', self::BASE_URL);
 
         return json_decode($this->httpRequest('GET', $url));
+    }
+
+    public function getUrl($repository, $commitId)
+    {
+        return sprintf('https://bitbucket.org/%s/%s/commits/%s',
+            $this->workspace,
+            $repository,
+            $commitId
+        );
     }
 }

@@ -44,7 +44,7 @@ class Command
             return array();
         }
 
-        $globalMessage = trim(preg_replace($pattern, ''));
+        $globalMessage = trim(preg_replace($pattern, '', $text));
 
         $ret = array();
 
