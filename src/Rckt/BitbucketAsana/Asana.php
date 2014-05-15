@@ -107,7 +107,9 @@ class Asana extends OAuth2
 
     public function getUsers()
     {
-        return $this->api('GET', '/users');
+        return $this->api('GET', '/users', array(
+            'opt_fields' => 'name,email',
+        ));
     }
 
     public function updateAssignee($taskId, $assigneeEmail)
