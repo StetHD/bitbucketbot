@@ -30,17 +30,9 @@ $request = Request::createFromGlobals();
 $requestLog->addDebug($request->__toString());
 
 // validate request params
-$projectId = $request->query->get('project_id', '');
+$payload = $request->request->get('payload', '');
 
-if (empty($projectId)) {
-    header('HTTP/1.1 400 Bad Request');
-    $appLog->addError('No project_id supplied');
-    die('No project_id supplied');
-}
-
-$payload = $request->getContent();
-
-if (empty($payload)) {
+if ($payload === null) {
     header('HTTP/1.1 400 Bad Request');
     $appLog->addError('No payload supplied');
     die('No payload supplied');
@@ -55,18 +47,16 @@ if ($payload === null) {
 }
 
 // todo validate payload
+$repo = $payload->repository->slug;
+
+if ($repo === null) {
+    header('HTTP/1.1 400 Bad Request');
+    $appLog->addError('Payload in incorrect format');
+    die('Payload in incorrect format');
+}
 
 // do things
 $config = require __DIR__.'/../config/config.php';
-
-if (!array_key_exists($projectId, $config['project_map'])) {
-    header('HTTP/1.1 404 Not Found');
-    $msg = sprintf('No project found in map for ID %s', $projectId);
-    $appLog->addError($msg);
-    die($msg);
-}
-
-$repo = $config['project_map'][$projectId];
 
 $bitbucket = new Bitbucket($config['bitbucket']['workspace'], $config['bitbucket']['key'], $config['bitbucket']['secret']);
 $bitbucket->setAccessToken($config['bitbucket']['access_token'])
@@ -111,10 +101,12 @@ foreach ($changesets as $changeset) {
             $userEmail = $command->getReassignment();
 
             try {
-                $asana->updateAssignee($comment->getId(), $userEmail);
+                $asana->updateAssignee($command->getId(), $userEmail);
             } catch (\RuntimeException $e) {
                 $appLog->addError($e->getMessage());
             }
         }
     }
 }
+
+$persistence->setLastChange($repo, $changesets[0]->raw_node);
