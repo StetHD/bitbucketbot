@@ -158,7 +158,7 @@ class Command
         }
 
         if ($this->hasReassignment()) {
-            $parts[] = 'reassign:'.$this->reassignment;
+            $parts[] = 'reassign:'.$this->reassign;
         }
 
         return '['.implode(' ', $parts).']';

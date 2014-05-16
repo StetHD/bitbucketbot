@@ -73,6 +73,10 @@ abstract class CurlEnabled
             throw new \Exception(sprintf('%s request for %s unsuccessful, server said [%d] %s, headers were %s', $method, $url, $httpCode, $response, implode(',', $headers)));
         }
 
+        if ($method == 'PUT') {
+            curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, null);
+        }
+
         return $response;
     }
 }
