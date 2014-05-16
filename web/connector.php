@@ -70,6 +70,8 @@ $lastChange = $persistence->getLastChange($repo);
 
 $changesets = $bitbucket->getChangesets($repo, $lastChange);
 
+$appLog->addInfo(sprintf('Got %d changesets with last change as %s', count($changesets), $lastChange));
+
 if (count($changesets) == 0) {
     exit;
 }
@@ -82,30 +84,40 @@ foreach ($changesets as $changeset) {
         continue;
     }
 
-    $appLog->addInfo(sprintf('Found %d commands', count($commands)));
+    $appLog->addInfo(sprintf('Found %d commands in change %s', count($commands), $changeset->raw_node));
 
     $url = $bitbucket->getUrl($repo, $changeset->raw_node);
 
     foreach ($commands as $command) {
-        try {
-            if ($command->hasMessage()) {
-                $msg = sprintf('This task was referenced by commit %s with the message: %s',
-                    $url, $command->getMessage());
+        $appLog->addInfo('Decoded command as '.$command);
 
+        if ($command->hasMessage()) {
+            $msg = sprintf('This task was referenced by commit %s with the message: %s',
+                $url, $command->getMessage());
+
+            try {
                 $asana->addComment($command->getId(), $msg);
+            } catch (\Exception $e) {
+                $appLog->addError('Unable to add comment: '.$e->getMessage());
             }
+        }
 
-            if ($command->hasTags()) {
+        if ($command->hasTags()) {
+            try {
                 $asana->updateTags($command->getId(), $command->getTags());
+            } catch (\Exception $e) {
+                $appLog->addError('Unable to set tags: '.$e->getMessage());
             }
+        }
 
-            if ($command->hasReassignment()) {
-                $userEmail = $command->getReassignment();
+        if ($command->hasReassignment()) {
+            $userEmail = $command->getReassignment();
 
+            try {
                 $asana->updateAssignee($command->getId(), $userEmail);
+            } catch (\Exception $e) {
+                $appLog->addError('Unable to set assignee: '.$e->getMessage());
             }
-        } catch (\RuntimeException $e) {
-            $appLog->addError($e->getMessage());
         }
     }
 }

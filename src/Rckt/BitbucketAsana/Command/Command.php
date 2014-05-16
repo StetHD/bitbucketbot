@@ -144,4 +144,23 @@ class Command
     {
         return !empty($this->reassign);
     }
+
+    public function __toString()
+    {
+        $parts = array('#'.$this->id);
+
+        if ($this->hasMessage()) {
+            $parts[] = $this->message;
+        }
+
+        if ($this->hasTags()) {
+            $parts[] = 'tags:'.implode(',', $this->tags);
+        }
+
+        if ($this->hasReassignment()) {
+            $parts[] = 'reassign:'.$this->reassignment;
+        }
+
+        return '['.implode(' ', $parts).']';
+    }
 }
