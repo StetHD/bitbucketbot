@@ -87,24 +87,25 @@ foreach ($changesets as $changeset) {
     $url = $bitbucket->getUrl($repo, $changeset->raw_node);
 
     foreach ($commands as $command) {
-        if ($command->hasMessage()) {
-            $msg = sprintf('This task was referenced by commit %s with the message: %s',
-                $url, $command->getMessage());
-            $asana->addComment($command->getId(), $msg);
-        }
+        try {
+            if ($command->hasMessage()) {
+                $msg = sprintf('This task was referenced by commit %s with the message: %s',
+                    $url, $command->getMessage());
 
-        if ($command->hasTags()) {
-            $asana->updateTags($command->getId(), $command->getTags());
-        }
-
-        if ($command->hasReassignment()) {
-            $userEmail = $command->getReassignment();
-
-            try {
-                $asana->updateAssignee($command->getId(), $userEmail);
-            } catch (\RuntimeException $e) {
-                $appLog->addError($e->getMessage());
+                $asana->addComment($command->getId(), $msg);
             }
+
+            if ($command->hasTags()) {
+                $asana->updateTags($command->getId(), $command->getTags());
+            }
+
+            if ($command->hasReassignment()) {
+                $userEmail = $command->getReassignment();
+
+                $asana->updateAssignee($command->getId(), $userEmail);
+            }
+        } catch (\RuntimeException $e) {
+            $appLog->addError($e->getMessage());
         }
     }
 }
