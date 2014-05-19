@@ -57,6 +57,13 @@ if ($repo === null) {
 
 // do things
 $config = require __DIR__.'/../config/config.php';
+$persistence = new Persistence($config['db']);
+
+if ($persistence->isLocked($repo)) {
+    exit;
+}
+
+$persistence->lock($repo);
 
 $bitbucket = new Bitbucket($config['bitbucket']['workspace'], $config['bitbucket']['key'], $config['bitbucket']['secret']);
 $bitbucket->setAccessToken($config['bitbucket']['access_token'])
@@ -65,9 +72,7 @@ $bitbucket->setAccessToken($config['bitbucket']['access_token'])
 $asana = new Asana($config['asana']['workspace_id'], $config['asana']['client_id'], $config['asana']['client_secret']);
 $asana->setApiKey($config['asana']['api_key']);
 
-$persistence = new Persistence($config['db']);
 $lastChange = $persistence->getLastChange($repo);
-
 $changesets = $bitbucket->getChangesets($repo, $lastChange);
 
 $appLog->addInfo(sprintf('Got %d changesets with last change as %s', count($changesets), $lastChange));
@@ -123,3 +128,4 @@ foreach ($changesets as $changeset) {
 }
 
 $persistence->setLastChange($repo, $changesets[0]->raw_node);
+$persistence->unlock($repo);
